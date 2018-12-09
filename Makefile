@@ -21,19 +21,18 @@ CPPFLAGS    += -I$(DOCTEST_ROOT)/doctest
 endif
 
 
+.PHONY: all clean
+
 all: di_test
 
-di_test:   di_test.o
+di_test: di_test_main.o di_test_impl.o
 	$(LD) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
-di_test.o: di_test.cc
-
-.PHONY: clean
 clean:
 	rm -rf *.o di_test
 
 ifdef USE_GOOGLETEST
-di_test : $(GTEST_LIB)
+di_test: $(GTEST_LIB)
 
 $(GTEST_LIB):
 	$(MAKE) -C $(GTEST)

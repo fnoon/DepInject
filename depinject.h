@@ -24,49 +24,60 @@
 
 namespace DepInject
 {
+  namespace Internals
+  {
+    //
+    //  A Builder object can build dependencies.
+    //
+    template <typename Dep>
+    class Builder {
+    public:
+      using BuildFunc = Dep* (*)();
 
-  template <typename Dep>
-  class Builder {
-  public:
-    using BuildFunc = Dep* (*)();
+      void declare(BuildFunc bldr, bool uniq) {
+        builder = bldr;
+        unique  = uniq;
+        if (!unique)
+          common_instance.reset();
+      }
 
-    void declare(BuildFunc bldr, bool uniq) {
-      builder = bldr;
-      unique  = uniq;
-      if (!unique)
-        common_instance.reset();
-    }
-
-    Dep* get() {
-      Dep* dep = nullptr;
-      if (builder) {
-        if (unique)
-          dep = builder();
-        else {
-          if (!common_instance)
-            common_instance.reset(builder());
-          dep = common_instance.get();
+      Dep* get() {
+        Dep* dep = nullptr;
+        if (builder) {
+          if (unique)
+            dep = builder();
+          else {
+            if (!common_instance)
+              common_instance.reset(builder());
+            dep = common_instance.get();
+          }
         }
+        if (!dep) {
+          std::string diag {builder ? "BuildFunc failed" : "no BuildFunc declared"};
+          throw std::logic_error("DepInject::Builder::get: "
+                                 "cannot build object (" + diag + ")");
+        }
+        return dep;
       }
-      if (!dep) {
-        std::string diag {builder ? "BuildFunc failed" : "no BuildFunc declared"};
-        throw std::logic_error("DepInject::Builder::get: "
-                               "cannot build object (" + diag + ")");
-      }
-      return dep;
-    }
 
-  private:
-    BuildFunc            builder {nullptr};
-    std::unique_ptr<Dep> common_instance;
-    bool                 unique  {false};
-  };
+    private:
+      BuildFunc            builder {nullptr};
+      std::unique_ptr<Dep> common_instance;
+      bool                 unique  {false};
+    };
+
+  } // Internals
 
 
+  //
+  //  Builders work in (singleton) Factories.
+  //  DepInject users only call Factory<Dep> methods.
+  //
   template <typename Dep>
   class Factory {
+    using Builder = Internals::Builder<Dep>;
   public:
-    static void declare(typename Builder<Dep>::BuildFunc bldr, bool uniq = false) {
+    static void declare(typename Builder::BuildFunc bldr, bool uniq = false) {
       auto builder = instance();
       builder->declare(bldr, uniq);
     }
@@ -77,8 +88,8 @@ namespace DepInject
     }
 
   private:
-    static Builder<Dep>* instance() {
-      static Builder<Dep> builder;
+    static Builder* instance() {
+      static Builder builder;
       return &builder;
     }
   };
@@ -86,10 +97,3 @@ namespace DepInject
 } // DepInject
 
 #endif  // NOON_DEPINJECT_H
-
-// Emacs:
-// Local Variables:
-// mode: c++
-// fill-column: 90
-// comment-column: 0
-// End:
