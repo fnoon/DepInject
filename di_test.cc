@@ -67,20 +67,12 @@ private:
   bool m_is_lit {false};
 };
 
-//template void DepInject::Dependency<IBulb>::declare(Creator cr, bool unique = false);
-//template DepInject::Dependency<IBulb>::DepSpec DepInject::Dependency<IBulb>::spec;
-
-DepInject::DependencyBuilder<IBulb> ibulb_builder;
-IBulb* build_our_ibulb() {
-  return new Bulb;
-}
 
 class Lamp {
 public:
   Lamp()
-//  : m_bulb(*DepInject::DependencyBuilder<IBulb>::get()) {
-    : m_bulb(*ibulb_builder.get()) {
-      cout << "lamp created\n";
+    : m_bulb(*DepInject::Factory<IBulb>::get()) {
+    cout << "lamp created\n";
   }
 
   void toggle_switch() {
@@ -99,10 +91,27 @@ private:
 };
 
 
+TEST_CASE("Test builder exceptions")
+{
+  // Calling get() before registration: no builder function.
+  REQUIRE_THROWS_WITH(Lamp lamp,
+                      "DepInject::Builder::get: cannot build object (no BuildFunc declared)");
+}
+
+
+TEST_CASE("Test builder exceptions")
+{
+  // Registered BuildFunc always fails.
+  DepInject::Factory<IBulb>::declare([]() -> IBulb* {return nullptr;});
+  REQUIRE_THROWS_WITH(Lamp lamp, "DepInject::Builder::get: cannot build object (BuildFunc failed)");
+}
+
+
 TEST_CASE("Test basic factory functionality")
 {
 
-  ibulb_builder.declare(build_our_ibulb);
+  // Register a Bulb builder (used by Lamp constructor).
+  DepInject::Factory<IBulb>::declare([]() -> IBulb* {return new Bulb;});
 
   Lamp lamp;
   REQUIRE(!lamp.is_lit());
