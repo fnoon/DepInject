@@ -8,15 +8,35 @@ referencing the framework.
 Its author is Frederick Noon, <frs.noon@gmail.com>, and is publicly available at https://github.com/fnoon/DepInject.
 
 Dependency injection presumes an overall architecture consisting of (a) application setup code, handiling
-program entry, configuration, and exit; and (b) application "business logic" containing the bulk of the runtime
+program entry, configuration, and exit; and (b) application “business logic” containing the bulk of the runtime
 functionality.
 Classes within the business end of the program have dependencies on other classes to help perform their work:
 these dependencies should be in the form of *interfaces,* pointers or references to abstract classes,
 rather than containing objects declared as concrete classes wherever unit test partitioning is to be implemented.
 In this way the actual class implementations they use can by *injected* into them at runtime,
 rather than fixed within the class at compile time.
-One can then change the setup code to "wire" the business classes together in different ways,
+One can then change the setup code to “wire” the business classes together in different ways,
 having them depend on production classes for production builds, or stubs and mocks for unit testing.
+
+## Philosophy
+There tend to be two approaches to dependency injection implementation: a *pull* model and a *push* model.
+DepInject implements a pull model.
+By this mechanism code requiring the services of a particular class retrieve a handle to one of its objects
+from a call to some factory class interface.
+By contrast, a push mechanism constructs objects for such code and then supply them either as parameters in its
+constructor or has subsequent setter routines.
+
+Some pros and cons of the two approaches:
+
+* Pull model code has to call a particular factory class singleton, whereas push model code has its dependencies
+“fall from the sky,” providing an illusion of generality.  Yet in both cases the dependent class must be explicitly coded to accept interfaces provided to it at runtime.
+
+* Push model framework implementations tend to more complex.  However, this complexity is hidden from all but the program setup code.
+
+* A pull model framework only needs to know how to construct concrete classes based on corresponding interface classes.
+A push model framework also needs to be configured to know the dependencies of each class it is allocating so that they may be “wired” together, in order.
+
+* Code using a pull model can request an already-configured factory object in an *ad hoc* manner, with no additional setup code.  In a push model, however, the dependend class’ interface must be modified to accept the new dependency, typically by changing the constructors.  Therefore all setup code, both for the production program and all test cases using the class, must be modified to use the new interface.  This can make throwing-in a log line in an arbitrary stretch of code more painful than it probably should be, IMHO.
 
 ## Basic Usage
 DepInject clients interact with its `DepInject::Factory<>` class template.
@@ -75,7 +95,7 @@ IBulb& bulb = *DepInject::Factory<IBulb>::get()
 In the *Basic Usage* section all objects of a given interface type were of the same concrete class,
 as `get()` always used the same declared construction routine.
 But one may occasionally need classes in ones code which rely on dependencies constructed in
-ways different from the default -- say, using a different concrete class or with different constructor arguments.
+ways different from the default — say, using a different concrete class or with different constructor arguments.
 Including a *tag* in an interface declaration, and subsequent retrieval, one can accommodate
 such classes.
 The usage is straightforward; if in the setup code one writes:
