@@ -1,11 +1,11 @@
 # DepInject: A C++ Dependency Injection Framework
 
 ## Introduction
-**DepInject** implements a [dependency injection][https://stackoverflow.com/questions/130794/what-is-dependency-injection]
+**DepInject** implements a [dependency injection](https://stackoverflow.com/questions/130794/what-is-dependency-injection)
 framework in C++.
 The entire implementation is contained in `depinject.h`, which must be #included in any compilation unit
 referencing the framework.
-Its author is Frederick Noon <frs.noon@gmail.com>, and is publicly available at https://github.com/fnoon/DepInject.
+Its author is Frederick Noon, <frs.noon@gmail.com>, and is publicly available at https://github.com/fnoon/DepInject.
 
 Dependency injection presumes an overall architecture consisting of (a) application setup code, handiling
 program entry, configuration, and exit; and (b) application "business logic" containing the bulk of the runtime
@@ -129,7 +129,7 @@ occasionally with some subtle limitations that mitigate much of the whiz-bang of
 (For example, the requirement that all a class's dependencies be passed in its constructor.)
 But if one feels the need for, say, automatic dependency wiring, one can investigate them.
 
-The included test / example code in the DepInject project uses the **[doctest][https://github.com/onqtam/doctest]**
+The included test / example code in the DepInject project uses the **[doctest](https://github.com/onqtam/doctest)**
 C++ unit test framework.  I find it spiffy keen!
 
 # License
