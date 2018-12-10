@@ -5,6 +5,7 @@
 framework in C++.
 The entire implementation is contained in `depinject.h`, which must be #included in any compilation unit
 referencing the framework.
+Its author is Frederick Noon <frs.noon@gmail.com>, and is publicly available at https://github.com/fnoon/DepInject.
 
 Dependency injection presumes an overall architecture consisting of (a) application setup code, handiling
 program entry, configuration, and exit; and (b) application "business logic" containing the bulk of the runtime
@@ -130,3 +131,8 @@ But if one feels the need for, say, automatic dependency wiring, one can investi
 
 The included test / example code in the DepInject project uses the **[doctest][https://github.com/onqtam/doctest]**
 C++ unit test framework.  I find it spiffy keen!
+
+# License
+
+I'm putting this project under the GNU Lesser General Public License, Version 3.
+Let me know if you require a different license for your needs.

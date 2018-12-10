@@ -1,5 +1,28 @@
-// depinject/depinject.h
+// depinject.h -- DepInject implementation file
+
+//================================================================================
 //
+// Copyright © 2018 Frederick Noon.  All rights reserved.
+//
+// This file is part of DepInject.
+//
+// DepInject is free software: you can redistribute it and/or modify it
+// under the terms of the GNU Lesser General Public License as published
+// by the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// DepInject is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with DepInject.  If not, see
+// <https://www.gnu.org/licenses/>.
+//
+//================================================================================
+
+
 // Notes on interface base classes:
 //
 //     * For dependency injection to make sense, the dependent classes known to depinject
@@ -14,7 +37,6 @@
 //       depinject will not maintain a common pointer to the new object for other classes
 //       to use.  In this case, the get() caller is responsible for the ultimate
 //       destruction of the returned object.
-//
 
 #ifndef NOON_DEPINJECT_H
 
