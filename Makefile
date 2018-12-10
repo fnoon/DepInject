@@ -25,7 +25,7 @@ endif
 
 all: di_test
 
-di_test: di_test_main.o di_test_impl.o
+di_test: di_test_main.o di_test_impl.o di_test_impl2.o
 	$(LD) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 clean:

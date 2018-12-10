@@ -73,10 +73,16 @@ namespace DepInject
   //  Builders work in (singleton) Factories.
   //  DepInject users only call Factory<Dep> methods.
   //
-  template <typename Dep>
+  struct DefaultTag { };
+
+  template <typename Dep, typename Tag = DefaultTag>
   class Factory {
     using Builder = Internals::Builder<Dep>;
   public:
+    Factory() = default;
+    Factory(Factory const&) = delete;
+    Factory& operator=(Factory const&) = delete;
+
     static void declare(typename Builder::BuildFunc bldr, bool uniq = false) {
       auto builder = instance();
       builder->declare(bldr, uniq);
@@ -93,6 +99,13 @@ namespace DepInject
       return &builder;
     }
   };
+
+
+  // A helper function, for the simplest cases.
+  template <typename Dep, typename Concrete, typename Tag = DefaultTag>
+  void basic_declaration() {
+    Factory<Dep, Tag>::declare([]() -> Dep* {return new Concrete;});
+  }
 
 } // DepInject
 
