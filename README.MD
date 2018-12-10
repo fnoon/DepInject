@@ -7,7 +7,7 @@ The entire implementation is contained in `depinject.h`, which must be #included
 referencing the framework.
 Its author is Frederick Noon, <frs.noon@gmail.com>, and is publicly available at https://github.com/fnoon/DepInject.
 
-Dependency injection presumes an overall architecture consisting of (a) application setup code, handiling
+Dependency injection presumes an overall architecture consisting of (a) application setup code, handling
 program entry, configuration, and exit; and (b) application “business logic” containing the bulk of the runtime
 functionality.
 Classes within the business end of the program have dependencies on other classes to help perform their work:
@@ -36,7 +36,7 @@ Some pros and cons of the two approaches:
 * A pull model framework only needs to know how to construct concrete classes based on corresponding interface classes.
 A push model framework also needs to be configured to know the dependencies of each class it is allocating so that they may be “wired” together, in order.
 
-* Code using a pull model can request an already-configured factory object in an *ad hoc* manner, with no additional setup code.  In a push model, however, the dependend class’ interface must be modified to accept the new dependency, typically by changing the constructors.  Therefore all setup code, both for the production program and all test cases using the class, must be modified to use the new interface.  This can make throwing-in a log line in an arbitrary stretch of code more painful than it probably should be, IMHO.
+* Code using a pull model can request an already-configured factory object in an *ad hoc* manner, with no additional setup code.  In a push model, however, the dependent class’ interface must be modified to accept the new dependency, typically by changing the constructors.  Therefore all setup code, both for the production program and all test cases using the class, must be modified to use the new interface.  This can make throwing-in a log line in an arbitrary stretch of code more painful than it probably should be, IMHO.
 
 ## Basic Usage
 DepInject clients interact with its `DepInject::Factory<>` class template.
@@ -128,14 +128,14 @@ DepInject::Factory<IBulb>::declare(AllocateBulb, true);
 
 Thereafter, clients calling `Factory<IBulb>::get()` will receive a pointer to their own unique object.
 Such clients are then **responsible for the lifetime of the returned object.**
-The client should ensure that the object is eventually destroyed, probably in the client's destructor.
+The client should ensure that the object is eventually destroyed, probably in the client’s destructor.
 This capability has been implemented as part of the `declare()` interface rather than the `get()` interface
 so that such code may be easier to reason about and track (say, with an independent tag).
 
 
 # References
 This dependency injection framework suits my needs and preferences,
-but I've found these other C++ implementations:
+but I’ve found these other C++ implementations:
 
   https://github.com/admiyo/CppInject (described at https://adam.younglogic.com/2008/07/dependency-injection-in-c/)
 
@@ -146,7 +146,7 @@ but I've found these other C++ implementations:
 These are generally fancier than my design, with an obvious increase in complexity.
 There are also differences in how these frameworks are used,
 occasionally with some subtle limitations that mitigate much of the whiz-bang often displayed in them.
-(For example, the requirement that all a class's dependencies be passed in its constructor.)
+(For example, the requirement that all a class’s dependencies be passed in its constructor.)
 But if one feels the need for, say, automatic dependency wiring, one can investigate them.
 
 The included test / example code in the DepInject project uses the **[doctest](https://github.com/onqtam/doctest)**
@@ -154,5 +154,5 @@ C++ unit test framework.  I find it spiffy keen!
 
 # License
 
-I'm putting this project under the GNU Lesser General Public License, Version 3.
+I’m putting this project under the GNU Lesser General Public License, Version 3.
 Let me know if you require a different license for your needs.
