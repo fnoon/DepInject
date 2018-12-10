@@ -38,7 +38,7 @@ TEST_CASE("Test builder exceptions")
 {
   // Calling get() before registration: no builder function.
   REQUIRE_THROWS_WITH(Lamp lamp,
-                      "DepInject::Builder::get: cannot build object (no BuildFunc declared)");
+                      "DepInject: get: object type not declared");
 }
 
 
@@ -46,15 +46,16 @@ TEST_CASE("Test builder exceptions")
 {
   // Register a BuildFunc which always fails.
   DepInject::Factory<IBulb>::declare([]() -> IBulb* {return nullptr;});
-  REQUIRE_THROWS_WITH(Lamp lamp, "DepInject::Builder::get: cannot build object (BuildFunc failed)");
+  REQUIRE_THROWS_WITH(Lamp lamp, "DepInject: get: object allocation failed");
 }
 
 
 TEST_CASE("Test basic factory functionality")
 {
-  // Register a Bulb builder (used by Lamp constructor).
-//  DepInject::Factory<IBulb>::declare([]() -> IBulb* {return new Bulb;});
+  DepInject::Factory<IBulb>::testing_reset();
 
+  // Register a Bulb builder (used by Lamp constructor).
+//DepInject::Factory<IBulb>::declare([]() -> IBulb* {return new Bulb;});
   DepInject::basic_declaration<IBulb, Bulb>();
 
   Lamp lamp;

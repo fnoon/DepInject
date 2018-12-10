@@ -56,30 +56,46 @@ namespace DepInject
     public:
       using BuildFunc = Dep* (*)();
 
-      void declare(BuildFunc bldr, bool uniq) {
+      void declare (BuildFunc bldr, bool uniq) {
+        if (builder)
+          throw std::logic_error("DepInject: declare: redeclaration for same type");
+        if (!bldr)
+          throw std::logic_error("DepInject: declare: no allocation function provided");
         builder = bldr;
         unique  = uniq;
-        if (!unique)
-          common_instance.reset();
       }
 
-      Dep* get() {
+      Dep* get (bool uniq) {
+        if (!builder) {
+          throw std::logic_error("DepInject: get: object type not declared");
+        }
+        if (uniq != unique) {
+          std::string qualif {unique ? "non-" : ""};
+          throw std::logic_error("DepInject: get: "
+                                 "request for " + qualif + " unique instance doesn't match declaration");
+        }
+
         Dep* dep = nullptr;
-        if (builder) {
-          if (unique)
-            dep = builder();
-          else {
-            if (!common_instance)
-              common_instance.reset(builder());
-            dep = common_instance.get();
-          }
+        if (unique)
+          dep = builder();
+        else {
+          if (!common_instance)
+            common_instance.reset(builder());
+          dep = common_instance.get();
         }
-        if (!dep) {
-          std::string diag {builder ? "BuildFunc failed" : "no BuildFunc declared"};
-          throw std::logic_error("DepInject::Builder::get: "
-                                 "cannot build object (" + diag + ")");
-        }
-        return dep;
+
+        if (dep)
+          return dep;
+        else
+          throw std::runtime_error("DepInject: get: object allocation failed");
+      }
+
+      void testing_reset ( ) {
+        // This function is intended to reinitialize the Builder singleton for testing
+        // DepInject itself.  Not for general use.
+        builder = nullptr;
+        common_instance.reset();
+        unique = false;
       }
 
     private:
@@ -105,18 +121,35 @@ namespace DepInject
     Factory(Factory const&) = delete;
     Factory& operator=(Factory const&) = delete;
 
-    static void declare(typename Builder::BuildFunc bldr, bool uniq = false) {
+    static void declare (typename Builder::BuildFunc bldr) {
       auto builder = instance();
-      builder->declare(bldr, uniq);
+      builder->declare(bldr, false);
     }
 
-    static Dep* get() {
+    static void declare_unique (typename Builder::BuildFunc bldr) {
       auto builder = instance();
-      return builder->get();
+      builder->declare(bldr, true);
+    }
+
+    static Dep* get ( ) {
+      auto builder = instance();
+      return builder->get(false);
+    }
+
+    static Dep* get_unique ( ) {
+      auto builder = instance();
+      return builder->get(true);
+    }
+
+    static void testing_reset ( ) {
+      // This function is intended to reinitialize the Builder singleton for testing
+      // DepInject itself.  Not for general use.
+      auto builder = instance();
+      builder->testing_reset();
     }
 
   private:
-    static Builder* instance() {
+    static Builder* instance ( ) {
       static Builder builder;
       return &builder;
     }

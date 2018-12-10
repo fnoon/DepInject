@@ -46,8 +46,12 @@ This is intended to be used by the application setup code as part of its program
 Thereafter, classes can call the `Factory<>` to retrieve pointers to whatever dependencies
 have been declared.
 
+Exceptions are thrown when “bad things” happen, such as attempted instance retrievals preceding declarations or
+object allocation failure.
+RTTI is not used.
+
 ### Interface Declaration
-Consider an example `IBulb` interface class, from which a concrete `Bulb` class is derived.
+Consider an example light bulb’s `IBulb` interface class, from which a concrete `Bulb` class is derived.
 The setup code declares the `IBulb` class, using the function `Factory<IBulb>::declare()` which
 is passed a routine that returns a pointer to a class derived from `IBulb`.
 For example,
@@ -83,7 +87,7 @@ IBulb* bulb = DepInject::Factory<IBulb>::get()
 Note that the lifetime of an object retrieved in such a manner is controlled by `DepInject::Factory<>`:
 the user of the object should therefore never `delete` it!
 This is because, by default, all calls to `get()` for objects of a given class **return the same object.**
-Therefore a caller should try to store the returned pointer in a reference variable:
+Therefore a caller should probably try to store the returned pointer in a reference variable:
 
 ```cpp
 IBulb& bulb = *DepInject::Factory<IBulb>::get()
@@ -117,20 +121,22 @@ IBulb& bulb = *DepInject::Factory<IBulb, GaudyTag>::get();
 ```
 
 ### Unique Object Declarations
-By default, DepInject constructs an object once, when first asked for, then keeps serving it to
+Following the above “basic usage,” DepInject constructs an object once, when first asked for, then keeps serving it to
 however many clients request an instance of that interface.
-If, however, clients require their own instances of the declared type it be declared with an additional
-`bool` parameter set to `true`:
+If, however, clients require their own instances of the declared type it be declared with the alternative
+`declare_unique()` call:
 
 ```cpp
-DepInject::Factory<IBulb>::declare(AllocateBulb, true);
+DepInject::Factory<IBulb>::declare_unique(AllocateBulb);
 ```
 
-Thereafter, clients calling `Factory<IBulb>::get()` will receive a pointer to their own unique object.
+Thereafter, clients calling `Factory<IBulb>::get_unique()` will receive a pointer to their own, unique instance.
 Such clients are then **responsible for the lifetime of the returned object.**
-The client should ensure that the object is eventually destroyed, probably in the client’s destructor.
-This capability has been implemented as part of the `declare()` interface rather than the `get()` interface
-so that such code may be easier to reason about and track (say, with an independent tag).
+The client should ensure that the object is eventually destroyed, probably in its destructor (say, by wrapping the bare pointer as a `std::unique_ptr<>`),
+although it is also possible to pass an allocator to `declare_unique()` that actually returns a pointer to a
+static object, rather than one allocated on the heap.
+The combination of interface type and tag must be unique among all `declare()` and `declare_unique()` calls,
+so that code code using owned instances may be easier to reason about and track.
 
 
 # References
