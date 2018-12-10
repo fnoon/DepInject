@@ -1,7 +1,0 @@
-{fsnoon}/src/tdd/depinject/README
-
-depinject: hacking together a simple C++ dependency injection registration scheme
-
-References:
-  https://adam.younglogic.com/2008/07/dependency-injection-in-c/
-  https://github.com/admiyo/CppInject
