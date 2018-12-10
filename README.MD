@@ -56,7 +56,7 @@ The setup code declares the `IBulb` class, using the function `Factory<IBulb>::d
 is passed a routine that returns a pointer to a class derived from `IBulb`.
 For example,
 
-```cpp
+```c++
 IBulb* AllocateBulb() {
     return new Bulb;
 }
@@ -66,13 +66,13 @@ DepInject::Factory<IBulb>::declare(AllocateBulb);
 
 A lambda can be used in lieu of a standalone allocation function:
 
-```cpp
+```c++
 DepInject::Factory<IBulb>::declare([]() -> IBulb* {return new Bulb;});
 ```
 
 Indeed, there is a helper function that wraps this lambda style of simple allocator:
 
-```cpp
+```c++
 DepInject::basic_declaration<IBulb, Bulb>();
 ```
 
@@ -80,7 +80,7 @@ DepInject::basic_declaration<IBulb, Bulb>();
 With the above `IBulb` declaration in place, a concrete `Lamp` class can retrieve a pointer
 to a new `IBulb` by calling:
 
-```cpp
+```c++
 IBulb* bulb = DepInject::Factory<IBulb>::get()
 ```
 
@@ -89,7 +89,7 @@ the user of the object should therefore never `delete` it!
 This is because, by default, all calls to `get()` for objects of a given class **return the same object.**
 Therefore a caller should probably try to store the returned pointer in a reference variable:
 
-```cpp
+```c++
 IBulb& bulb = *DepInject::Factory<IBulb>::get()
 ```
 
@@ -104,7 +104,7 @@ Including a *tag* in an interface declaration, and subsequent retrieval, one can
 such classes.
 The usage is straightforward; if in the setup code one writes:
 
-```cpp
+```c++
 IBulb* AllocateGaudyBulb() {
     return new GaudyBulb;
 }
@@ -116,7 +116,7 @@ DepInject::Factory<IBulb, GaudyTag>::declare(AllocateGaudyBulb);
 
 one can then use the alternative implementation so:
 
-```cpp
+```c++
 IBulb& bulb = *DepInject::Factory<IBulb, GaudyTag>::get();
 ```
 
@@ -126,7 +126,7 @@ however many clients request an instance of that interface.
 If, however, clients require their own instances of the declared type it be declared with the alternative
 `declare_unique()` call:
 
-```cpp
+```c++
 DepInject::Factory<IBulb>::declare_unique(AllocateBulb);
 ```
 
