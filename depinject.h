@@ -58,7 +58,7 @@ namespace DepInject
 
       void declare (BuildFunc bldr, bool uniq) {
         if (builder)
-          throw std::logic_error("DepInject: declare: redeclaration for same type");
+          throw std::logic_error("DepInject: declare: redeclaration for same type+tag");
         if (!bldr)
           throw std::logic_error("DepInject: declare: no allocation function provided");
         builder = bldr;
@@ -66,15 +66,18 @@ namespace DepInject
       }
 
       Dep* get (bool uniq) {
+        // Status checks.
         if (!builder) {
-          throw std::logic_error("DepInject: get: object type not declared");
+          throw std::logic_error("DepInject: get: object type+tag not declared");
         }
         if (uniq != unique) {
           std::string qualif {unique ? "non-" : ""};
           throw std::logic_error("DepInject: get: "
-                                 "request for " + qualif + " unique instance doesn't match declaration");
+                                 "request for " + qualif +
+                                 "unique instance doesn't match declaration");
         }
 
+        // Call the user-supplied builder function.
         Dep* dep = nullptr;
         if (unique)
           dep = builder();
@@ -84,6 +87,10 @@ namespace DepInject
           dep = common_instance.get();
         }
 
+        // Return the results.
+        // Note that we have no 'dep' to clean up if there's a problem.
+        // If the builder() threw an exception (say, memory allocation failure),
+        // then we won't be getting this far anyway.
         if (dep)
           return dep;
         else
@@ -91,8 +98,8 @@ namespace DepInject
       }
 
       void testing_reset ( ) {
-        // This function is intended to reinitialize the Builder singleton for testing
-        // DepInject itself.  Not for general use.
+        // This function for testing DepInject itself.  Not for general use.
+        // It reinitializes the Builder singleton, clearing its state.
         builder = nullptr;
         common_instance.reset();
         unique = false;
@@ -116,6 +123,7 @@ namespace DepInject
   template <typename Dep, typename Tag = DefaultTag>
   class Factory {
     using Builder = Internals::Builder<Dep>;
+
   public:
     Factory() = default;
     Factory(Factory const&) = delete;
@@ -142,8 +150,7 @@ namespace DepInject
     }
 
     static void testing_reset ( ) {
-      // This function is intended to reinitialize the Builder singleton for testing
-      // DepInject itself.  Not for general use.
+      // This function is for testing DepInject itself.  Not for general use.
       auto builder = instance();
       builder->testing_reset();
     }
