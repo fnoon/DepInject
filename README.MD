@@ -11,25 +11,23 @@ available at https://github.com/fnoon/DepInject.
 
 Dependency injection presumes an overall architecture consisting of (a) application setup code,
 handling program entry, configuration, and exit; and (b) application “business logic” containing the
-bulk of the runtime functionality.
-Classes within the business end of the program have dependencies on other classes to help perform
-their work: these dependencies should be in the form of *interfaces,* pointers or references to
-abstract classes, rather than containing objects declared as concrete classes wherever unit test
-partitioning is to be implemented.
-In this way the actual class implementations they use can by *injected* into them at runtime, rather
-than fixed within the class at compile time.
-One can then change the setup code to “wire” the business classes together in different ways, having
-them depend on production classes for production builds, or stubs and mocks for unit testing.
+bulk of the runtime functionality.  Classes within the business end of the program naturally have
+dependencies upon other classes to help perform their work: wherever unit test partitioning is to be
+implemented, these dependencies should be in the form of *interfaces,* pointers or references to
+abstract classes, rather than containing objects declared as concrete classes.  In this way the
+actual class implementations they use can by *injected* into them at runtime, rather than fixed
+within the class at compile time.  One can then change the setup code to “wire” the business classes
+together in different ways, having them depend on production classes for production builds, or stubs
+and mocks for unit testing.
 
 ## Philosophy
 
 There tend to be two approaches to dependency injection implementation: a *pull* model and a *push*
-model.
-DepInject implements a pull model.
-By this mechanism code requiring the services of a particular class retrieve a handle to one of its
-objects from a call to some factory class interface.
-By contrast, a push mechanism constructs objects for such code and then supply them either as
-parameters in its constructor or has subsequent setter routines.
+model.  DepInject implements the *pull* model.  By this mechanism, code requiring the services of a
+particular class retrieves handles to objects of that class from calls to a factory interface.  By
+contrast, a *push* mechanism constructs objects for such code in advance and then supplies them to
+the dependent classes, either as parameters in their constructors or through subsequent *setter*
+routines.
 
 Some pros and cons of the two approaches:
 
@@ -48,8 +46,11 @@ Some pros and cons of the two approaches:
   with no additional setup code.  In a push model, however, the dependent class’ interface must be
   modified to accept the new dependency, typically by changing the constructors.  Therefore all
   setup code, both for the production program and all test cases using the class, must be modified
-  to use the new interface.  This can make throwing-in a log line in an arbitrary stretch of code
-  more painful than it probably should be, IMHO.
+  to use the new interface.
+
+That last point can make throwing-in a log line into an arbitrary stretch of code more painful than
+it probably should be (IMHO), when the “logger” dependency of the module hadn’t been previously
+identified.
 
 ## Basic Usage
 
@@ -87,6 +88,7 @@ Indeed, there is a helper function that wraps this lambda style of simple alloca
 ```c++
 DepInject::basic_declaration<IBulb, Bulb>();
 ```
+
 
 ### Interface Retrieval
 
@@ -152,7 +154,7 @@ wrapping the bare pointer as a `std::unique_ptr<>`).
 allocator to `declare_unique()` that returns a pointer to a *static* object, rather than one
 allocated on the heap; DepInject won’t know the difference.)
 The combination of interface type and tag must be unique among all
-`declare()` and `declare_unique()` calls, so that code code using owned instances may be easier to
+`declare()` and `declare_unique()` calls, so that code using owned instances may be easier to
 reason about and track.
 This is a *feature*!
 
@@ -176,7 +178,7 @@ class’s dependencies be passed in its constructor.)  But if one feels the need
 dependency wiring, one can investigate them.
 
 The included test / example code in the DepInject project uses the
-**[doctest](https://github.com/onqtam/doctest)** C++ unit test framework.  I find it spiffy keen!
+**[doctest](https://github.com/onqtam/doctest)** C++ unit test framework.  I find it spiffy-keen!
 
 # License
 
