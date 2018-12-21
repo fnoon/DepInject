@@ -1,4 +1,4 @@
-// di_test_main.cc -- test driver setup code
+// di_main.cc -- DepInject test driver setup code
 
 //================================================================================
 //
@@ -21,8 +21,8 @@
 // <https://www.gnu.org/licenses/>.
 //
 
-#include "di_test_impl.h"
-#include "di_test_impl2.h"
+#include "di_bulbs.h"
+#include "di_lamps.h"
 #include "depinject.h"
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN

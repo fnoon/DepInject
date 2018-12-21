@@ -1,4 +1,4 @@
-// di_test_impl2.cc -- second test driver implementation file
+// di_lamps.cc -- DepInject test driver lamp classes implementation file
 
 //================================================================================
 //
@@ -21,7 +21,7 @@
 // <https://www.gnu.org/licenses/>.
 //
 
-#include "di_test_impl2.h"
+#include "di_lamps.h"
 #include "depinject.h"
 #include <iostream>
 
@@ -31,41 +31,59 @@ using std::endl;
 
 //////////////////////////////////////////////////////////////////////////////////
 //
-//  (concrete) class GaudyBulb implementation.
+//  class Lamp implementation.
 //
 //////////////////////////////////////////////////////////////////////////////////
 
-GaudyBulb::GaudyBulb ()
+Lamp::Lamp()
+  : m_bulb(*DepInject::Factory<IBulb>::get())
 {
-  cout << "gaudy bulb created\n";
-}
-
-
-// Restore copy operations, overriding base class deletions.
-GaudyBulb::GaudyBulb (GaudyBulb const& b)
-  : m_is_lit(b.m_is_lit)
-{ }
-
-
-GaudyBulb&
-GaudyBulb::operator= (GaudyBulb const& b)
-{
-  m_is_lit = b.m_is_lit;
-  return *this;
+  cout << "lamp created\n";
 }
 
 
 void
-GaudyBulb::do_electrified (bool receiving_current)
+Lamp::toggle_switch ()
 {
-  m_is_lit = receiving_current;
+  m_current_flowing = !m_current_flowing;
+  m_bulb.electrified(m_current_flowing);
+  cout << "lamp turned " << (m_bulb.is_lit() ? "on" : "off") << endl;
 }
 
 
 bool
-GaudyBulb::do_is_lit() const
+Lamp::is_lit () const
 {
-  return m_is_lit;
+  return m_bulb.is_lit();
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////
+//
+//  class LampWithUniqueBulb implementation.
+//
+//////////////////////////////////////////////////////////////////////////////////
+
+LampWithUniqueBulb::LampWithUniqueBulb ( )
+  : m_bulb(DepInject::Factory<IBulb, UniqueTag>::get_unique())
+{
+  cout << "lamp with unique bulb created\n";
+}
+
+
+void
+LampWithUniqueBulb::toggle_switch ( )
+{
+  m_current_flowing = !m_current_flowing;
+  m_bulb->electrified(m_current_flowing);
+  cout << "lamp turned " << (m_bulb->is_lit() ? "on" : "off") << endl;
+}
+
+
+bool
+LampWithUniqueBulb::is_lit ( ) const
+{
+  return m_bulb->is_lit();
 }
 
 
@@ -75,7 +93,7 @@ GaudyBulb::do_is_lit() const
 //
 //////////////////////////////////////////////////////////////////////////////////
 
-GaudyLamp::GaudyLamp()
+GaudyLamp::GaudyLamp ( )
   : m_bulb(*DepInject::Factory<IBulb, GaudyTag>::get())
 {
   cout << "gaudy lamp created\n";
@@ -83,7 +101,7 @@ GaudyLamp::GaudyLamp()
 
 
 void
-GaudyLamp::toggle_switch ()
+GaudyLamp::toggle_switch ( )
 {
   m_current_flowing = !m_current_flowing;
   m_bulb.electrified(m_current_flowing);
@@ -92,7 +110,7 @@ GaudyLamp::toggle_switch ()
 
 
 bool
-GaudyLamp::is_lit () const
+GaudyLamp::is_lit ( ) const
 {
   return m_bulb.is_lit();
 }

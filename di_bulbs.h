@@ -1,4 +1,4 @@
-// di_test_impl.h -- first test driver header
+// di_bulbs.h -- DepInject test driver header declaring bulb classes
 
 //================================================================================
 //
@@ -20,38 +20,14 @@
 // License along with DepInject.  If not, see
 // <https://www.gnu.org/licenses/>.
 
-#ifndef NOON_DI_TEST_IMPL_H
-#define NOON_DI_TEST_IMPL_H
+#ifndef NOON_DI_BULBS_H
+#define NOON_DI_BULBS_H
 
-#include <memory>
+#include "di_bulb_api.h"
 
-
-class IBulb {
-public:
-
-  // Allow deletion through an interface pointer.
-  virtual ~IBulb();
-
-  // Forbid copying (slicing) via an interface pointer.
-  IBulb(IBulb const&) = delete;
-  IBulb& operator=(IBulb const&) = delete;
-
-  // Non-virtual public interface.
-  void electrified(bool receiving_current);
-
-  bool is_lit() const;
-
-protected:
-  // Forbid instantiation of a bare interface class object.
-  IBulb();
-
-private:
-  // Virtual hooks for derived class implementations.
-  virtual void do_electrified(bool receiving_current) = 0;
-  virtual bool do_is_lit() const = 0;
-};
-
-
+//
+//  Bulb class: a concrete class implementing the IBulb interface.
+//
 class Bulb : public IBulb {
 public:
   Bulb();
@@ -68,33 +44,23 @@ private:
 };
 
 
-class Lamp {
+//
+//  GaudyBulb class: A second concrete class implementing the IBulb interface.
+//
+class GaudyBulb : public IBulb {
 public:
-  Lamp();
+  GaudyBulb();
 
-  void toggle_switch();
-
-  bool is_lit() const;
+  // Restore copy operations, overriding base class deletions.
+  GaudyBulb(GaudyBulb const& b);
+  GaudyBulb& operator=(GaudyBulb const& b);
 
 private:
-  IBulb& m_bulb;
-  bool   m_current_flowing {false};
+  virtual void do_electrified(bool receiving_current) override;
+  virtual bool do_is_lit() const override;
+
+  bool m_is_lit {false};
 };
 
 
-struct UniqueTag { };
-
-class LampWithUniqueBulb {
-public:
-  LampWithUniqueBulb();
-
-  void toggle_switch();
-
-  bool is_lit() const;
-
-private:
-  std::unique_ptr<IBulb> m_bulb;
-  bool                   m_current_flowing {false};
-};
-
-#endif // NOON_DI_TEST_IMPL_H
+#endif // NOON_DI_BULBS_H

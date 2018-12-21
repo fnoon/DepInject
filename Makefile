@@ -21,7 +21,6 @@
 CXX       = c++
 CXXFLAGS += -std=c++14
 LD        = c++
-LDFLAGS  += -stdlib=libc++
 
 USE_GOOGLETEST =
 USE_DOCTEST    = true
@@ -45,7 +44,7 @@ endif
 
 all: di_test
 
-di_test: di_test_main.o di_test_impl.o di_test_impl2.o
+di_test: di_main.o di_bulbs.o di_lamps.o
 	$(LD) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 clean:
