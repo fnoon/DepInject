@@ -35,7 +35,7 @@
 //
 //     * A dependency registration may optionally be flagged as "unique," meaning that
 //       depinject will not maintain a common pointer to the new object for other classes
-//       to use.  In this case, the get() caller is responsible for the ultimate
+//       to use.  In this case, the get_unique() caller is responsible for the ultimate
 //       destruction of the returned object.
 
 #ifndef NOON_DEPINJECT_H
