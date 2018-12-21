@@ -29,69 +29,199 @@
 #include "doctest.h"
 
 #include <iostream>
+#include <type_traits>
 
 using std::cout;
 using std::endl;
 
 
-TEST_CASE("Test builder exceptions")
+// Create strings for doctest to print for the types used in our tests.
+TYPE_TO_STRING(Lamp);
+TYPE_TO_STRING(LampWithUniqueBulb);
+TYPE_TO_STRING(GaudyLamp);
+
+// A tag never used by any class to retrieve a dependency.
+struct WrongTag {};
+
+
+// reset_all_factories:
+//   Clear entries from all (singleton) Factory<>'s to establish a known
+//   global state before running the next unit test.  (This maneuver should
+//   never be needed in any production code.)
+void
+reset_all_factories ( )
 {
-  // Calling get() before registration: no builder function.
-  REQUIRE_THROWS_WITH(Lamp lamp,
-                      "DepInject: get: object type not declared");
+    DepInject::Factory<IBulb           >::testing_reset();
+    DepInject::Factory<IBulb, UniqueTag>::testing_reset();
+    DepInject::Factory<IBulb, GaudyTag >::testing_reset();
+    DepInject::Factory<IBulb, WrongTag >::testing_reset();
 }
 
 
-TEST_CASE("Test builder exceptions")
+// DepTraits:
+//   Traits classes to help make more generic tests.
+template <typename T>
+struct DepTraits {
+  using tag = DepInject::DefaultTag;
+  static const bool declared_unique = false;
+};
+
+template <>
+struct DepTraits <LampWithUniqueBulb> {
+  using tag = UniqueTag;
+  static const bool declared_unique = true;
+};
+
+template <>
+struct DepTraits <GaudyLamp> {
+  using tag = GaudyTag;
+  static const bool declared_unique = false;
+};
+
+
+// tag_required_for_declaration:
+//   Determine whether the given Requesting type uses a (non-default) tag when retrieving
+//   an IBulb from a factory.  If not, then the 'tag' parameter may be omitted on declare()
+//   and get() calls.
+template <typename T>
+bool tag_required_for_declaration ( )
 {
-  // Register a BuildFunc which always fails.
-  DepInject::Factory<IBulb>::declare([]() -> IBulb* {return nullptr;});
-  REQUIRE_THROWS_WITH(Lamp lamp, "DepInject: get: object allocation failed");
+  return !std::is_same<typename DepTraits<T>::tag, DepInject::DefaultTag>::value;
+}
+
+
+// call_standard_declaration:
+//   A helper function for the unit tests, to let them call the combinations of tagged /
+//   non-tagged and unique / non-unique declarations in a common manner.  (Separate cases
+//   omitting a tag when the default tag is used weren't strictly necessary, but I wanted
+//   to "exercise" the the template's default parameter.)
+template <typename Requestor, typename Dependency>
+void call_standard_declaration (Dependency* (*builder)())
+{
+  if (tag_required_for_declaration<Requestor>()) {
+    if (DepTraits<Requestor>::declared_unique)
+      DepInject::Factory<Dependency, typename DepTraits<Requestor>::tag>::declare_unique(builder);
+    else
+      DepInject::Factory<Dependency, typename DepTraits<Requestor>::tag>::declare(builder);
+  }
+  else {
+    if (DepTraits<Requestor>::declared_unique)
+      DepInject::Factory<Dependency>::declare_unique(builder);
+    else
+      DepInject::Factory<Dependency>::declare(builder);
+  }
+}
+
+
+TEST_SUITE("Test exception generation")
+{
+  SCENARIO_TEMPLATE("Common exception tests", Lamp_T, Lamp, LampWithUniqueBulb, GaudyLamp) {
+    reset_all_factories();
+
+    GIVEN("A Lamp-like class") {
+      // Here: we use the Lamp_T alias.
+
+      WHEN("get() is called before declare()") {
+        THEN("an exception should be thrown") {
+          CHECK_THROWS_WITH(Lamp_T lamp,
+                        "DepInject: get: object type+tag not declared");
+        }
+      }
+      AND_WHEN("The dependency allocator function fails") {
+        // Register a BuildFunc which always fails.
+        call_standard_declaration<Lamp_T, IBulb>([]() -> IBulb* {return nullptr;});
+
+        THEN("The attempted allocation should generate an exception") {
+          CHECK_THROWS_WITH(Lamp_T lamp, "DepInject: get: object allocation failed");
+        }
+      }
+      AND_WHEN("The dependency allocator function succeeds") {
+        // Register a BuildFunc which "should" always succeed.
+        call_standard_declaration<Lamp_T, IBulb>([]() -> IBulb* {return new Bulb;});
+
+        THEN("The object should be allocated and returned") {
+          CHECK_NOTHROW(Lamp_T lamp);
+        }
+      }
+      AND_WHEN("The dependency allocator function is called with the wrong tag") {
+        DepInject::Factory<IBulb, WrongTag>::declare([]() -> IBulb* {return new Bulb;});
+
+        THEN("The attempted allocation should throw") {
+          CHECK_THROWS_WITH(Lamp_T lamp,
+                            "DepInject: get: object type+tag not declared");
+        }
+      }
+    }
+  }
+
+  SCENARIO("Exceptions for non-unique classes") {
+    reset_all_factories();
+
+    GIVEN("A class with a non-unique dependency") {
+      using Lamp_T = Lamp;
+
+      WHEN("The dependency allocator function is registered as \"unique\"") {
+        DepInject::Factory<IBulb>::declare_unique([]() -> IBulb* {return new Bulb;});
+
+        THEN("The attempted allocation should throw") {
+          CHECK_THROWS_WITH(Lamp_T lamp,
+                            "DepInject: get: request for "
+                            "non-unique instance doesn't match declaration");
+        }
+      }
+    }
+  }
+
+  SCENARIO("Exceptions for unique classes") {
+    reset_all_factories();
+
+    GIVEN("A class with a unique dependency") {
+      using Lamp_T = LampWithUniqueBulb;
+
+      WHEN("The dependency allocator function is NOT registered as \"unique\"") {
+        DepInject::Factory<IBulb, UniqueTag>::declare([]() -> IBulb* {return new Bulb;});
+
+        THEN("The attempted allocation should throw") {
+          CHECK_THROWS_WITH(Lamp_T lamp,
+                            "DepInject: get: request for "
+                            "unique instance doesn't match declaration");
+        }
+      }
+    }
+  }
+}
+
+
+template <typename Lamp_T>
+void exercise_lamp_wiring ( )
+{
+  Lamp_T lamp;
+  REQUIRE(!lamp.is_lit());
+  lamp.toggle_switch();
+  REQUIRE(lamp.is_lit());
+  lamp.toggle_switch();
+  REQUIRE(!lamp.is_lit());
 }
 
 
 TEST_CASE("Test basic factory functionality")
 {
-  DepInject::Factory<IBulb>::testing_reset();
+  reset_all_factories();
 
-  // Register a Bulb builder (used by Lamp constructor).
-//DepInject::Factory<IBulb>::declare([]() -> IBulb* {return new Bulb;});
+  // We "hand-craft" our Bulb builders, then call exercise_lamp_wiring() to
+  // exercise them.
+
+  // For the simple case, use the helper function equivalent to:
+  // DepInject::Factory<IBulb>::declare([]() -> IBulb* {return new Bulb;});
   DepInject::basic_declaration<IBulb, Bulb>();
 
-  Lamp lamp;
-  REQUIRE(!lamp.is_lit());
-  lamp.toggle_switch();
-  REQUIRE(lamp.is_lit());
-  lamp.toggle_switch();
-  REQUIRE(!lamp.is_lit());
+  // Register a "unique" Bulb builder (used by LampWithUniqueBulb).
+  DepInject::Factory<IBulb, UniqueTag>::declare_unique([]() -> IBulb* {return new Bulb;});
 
-  Bulb b1;
-  Bulb b2(b1);
-  b1 = b2;
-  b2 = std::move(b1);
-  Bulb b3(std::move(b2));
-
-  IBulb* ib1(new Bulb);
-  IBulb* ib2(new Bulb);
-  IBulb* ib3 = ib2;
-  cout << ib1->is_lit() << endl;
-  cout << ib2->is_lit() << endl;
-  ib2->electrified(true);
-  // *ib1 = *ib2;
-  // cout << ib1->is_lit() << endl;
-  // cout << ib2->is_lit() << endl;
-}
-
-
-TEST_CASE("Test tagged factory functionality")
-{
   // Register a Gaudy Bulb builder (used by Gaudy Lamp constructor).
   DepInject::Factory<IBulb, GaudyTag>::declare([]() -> IBulb* {return new GaudyBulb;});
 
-  GaudyLamp lamp;
-  REQUIRE(!lamp.is_lit());
-  lamp.toggle_switch();
-  REQUIRE(lamp.is_lit());
-  lamp.toggle_switch();
-  REQUIRE(!lamp.is_lit());
+  exercise_lamp_wiring<Lamp>();
+  exercise_lamp_wiring<LampWithUniqueBulb>();
+  exercise_lamp_wiring<GaudyLamp>();
 }
