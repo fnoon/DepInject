@@ -127,3 +127,32 @@ Lamp::is_lit () const
 {
   return m_bulb.is_lit();
 }
+
+
+//////////////////////////////////////////////////////////////////////////////////
+//
+//  class LampWithUniqueBulb implementation.
+//
+//////////////////////////////////////////////////////////////////////////////////
+
+LampWithUniqueBulb::LampWithUniqueBulb()
+  : m_bulb(DepInject::Factory<IBulb, UniqueTag>::get_unique())
+{
+  cout << "lamp with unique bulb created\n";
+}
+
+
+void
+LampWithUniqueBulb::toggle_switch ()
+{
+  m_current_flowing = !m_current_flowing;
+  m_bulb->electrified(m_current_flowing);
+  cout << "lamp turned " << (m_bulb->is_lit() ? "on" : "off") << endl;
+}
+
+
+bool
+LampWithUniqueBulb::is_lit () const
+{
+  return m_bulb->is_lit();
+}

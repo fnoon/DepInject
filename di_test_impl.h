@@ -23,6 +23,9 @@
 #ifndef NOON_DI_TEST_IMPL_H
 #define NOON_DI_TEST_IMPL_H
 
+#include <memory>
+
+
 class IBulb {
 public:
 
@@ -76,6 +79,22 @@ public:
 private:
   IBulb& m_bulb;
   bool   m_current_flowing {false};
+};
+
+
+struct UniqueTag { };
+
+class LampWithUniqueBulb {
+public:
+  LampWithUniqueBulb();
+
+  void toggle_switch();
+
+  bool is_lit() const;
+
+private:
+  std::unique_ptr<IBulb> m_bulb;
+  bool                   m_current_flowing {false};
 };
 
 #endif // NOON_DI_TEST_IMPL_H
