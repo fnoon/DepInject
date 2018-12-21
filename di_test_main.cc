@@ -80,13 +80,13 @@ struct DepTraits <GaudyLamp> {
 
 
 // tag_required_for_declaration:
-//   Determine whether the given Requesting type uses a (non-default) tag when retrieving
+//   Determine whether the given Lamp-like type uses a (non-default) tag when retrieving
 //   an IBulb from a factory.  If not, then the 'tag' parameter may be omitted on declare()
 //   and get() calls.
-template <typename T>
+template <typename Lamp_T>
 bool tag_required_for_declaration ( )
 {
-  return !std::is_same<typename DepTraits<T>::tag, DepInject::DefaultTag>::value;
+  return !std::is_same<typename DepTraits<Lamp_T>::tag, DepInject::DefaultTag>::value;
 }
 
 
