@@ -39,12 +39,15 @@
 class Lamp {
 public:
   Lamp();
+  ~Lamp();
 
   void toggle_switch();
 
   bool is_lit() const;
 
 private:
+  static unsigned lampcount(bool incr = false);
+
   IBulb& m_bulb;
   bool   m_current_flowing {false};
 };
@@ -58,12 +61,15 @@ struct UniqueTag { };
 class LampWithUniqueBulb {
 public:
   LampWithUniqueBulb();
+  ~LampWithUniqueBulb();
 
   void toggle_switch();
 
   bool is_lit() const;
 
 private:
+  static unsigned lampcount(bool incr = false);
+
   std::unique_ptr<IBulb> m_bulb;
   bool                   m_current_flowing {false};
 };
@@ -77,12 +83,15 @@ struct GaudyTag { };
 class GaudyLamp {
 public:
   GaudyLamp();
+  ~GaudyLamp();
 
   void toggle_switch();
 
   bool is_lit() const;
 
 private:
+  static unsigned lampcount(bool incr = false);
+
   IBulb& m_bulb;
   bool   m_current_flowing {false};
 };

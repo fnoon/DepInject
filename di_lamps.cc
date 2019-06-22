@@ -23,6 +23,7 @@
 
 #include "di_lamps.h"
 #include "depinject.h"
+#include <atomic>
 #include <iostream>
 
 using std::cout;
@@ -35,10 +36,16 @@ using std::endl;
 //
 //////////////////////////////////////////////////////////////////////////////////
 
-Lamp::Lamp()
+Lamp::Lamp ( )
   : m_bulb(*DepInject::Factory<IBulb>::get())
 {
-  cout << "lamp created\n";
+  cout << "Lamp #" << lampcount(true) << " created\n";
+}
+
+
+Lamp::~Lamp ( )
+{
+  cout << "Lamp #" << lampcount() << " destroyed\n";
 }
 
 
@@ -58,6 +65,17 @@ Lamp::is_lit () const
 }
 
 
+unsigned
+Lamp::lampcount (bool incr)
+{
+  static std::atomic_uint count {0};
+  if (incr)
+    return count.fetch_add(1) + 1;
+  else
+    return count.load();
+}
+
+
 //////////////////////////////////////////////////////////////////////////////////
 //
 //  class LampWithUniqueBulb implementation.
@@ -67,7 +85,13 @@ Lamp::is_lit () const
 LampWithUniqueBulb::LampWithUniqueBulb ( )
   : m_bulb(DepInject::Factory<IBulb, UniqueTag>::get_unique())
 {
-  cout << "lamp with unique bulb created\n";
+  cout << "lamp with unique bulb #" << lampcount(true) << " created\n";
+}
+
+
+LampWithUniqueBulb::~LampWithUniqueBulb ( )
+{
+  cout << "lamp with unique bulb #" << lampcount() << " destroyed\n";
 }
 
 
@@ -87,6 +111,17 @@ LampWithUniqueBulb::is_lit ( ) const
 }
 
 
+unsigned
+LampWithUniqueBulb::lampcount (bool incr)
+{
+  static std::atomic_uint count {0};
+  if (incr)
+    return count.fetch_add(1) + 1;
+  else
+    return count.load();
+}
+
+
 //////////////////////////////////////////////////////////////////////////////////
 //
 //  class GaudyLamp implementation.
@@ -96,7 +131,13 @@ LampWithUniqueBulb::is_lit ( ) const
 GaudyLamp::GaudyLamp ( )
   : m_bulb(*DepInject::Factory<IBulb, GaudyTag>::get())
 {
-  cout << "gaudy lamp created\n";
+  cout << "gaudy lamp #" << lampcount(true) << " created\n";
+}
+
+
+GaudyLamp::~GaudyLamp ( )
+{
+  cout << "gaudy lamp #" << lampcount() << " destroyed\n";
 }
 
 
@@ -113,4 +154,15 @@ bool
 GaudyLamp::is_lit ( ) const
 {
   return m_bulb.is_lit();
+}
+
+
+unsigned
+GaudyLamp::lampcount (bool incr)
+{
+  static std::atomic_uint count {0};
+  if (incr)
+    return count.fetch_add(1) + 1;
+  else
+    return count.load();
 }
